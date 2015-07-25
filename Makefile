@@ -26,13 +26,24 @@ objects := $(call get_objects, $(wildcard $(dir_source)/*.s $(dir_source)/*.c))
 objects_payload := $(call get_objects, \
 				   $(call rwildcard, $(dir_source)/payload, *.s *.c))
 
-versions_eju := mset_4x mset_4x_dg mset_6x spider_4x spider_5x spider_9x
+versions_eju := spider_4x spider_5x spider_9x
 versions_cn :=  spider_42_cn spider_45_cn spider_5x_cn spider_9x_cn
 versions_kr :=  spider_4x_kr spider_5x_kr spider_9x_kr
 versions_tw :=  spider_4x_tw spider_5x_tw spider_9x_tw
-versions := $(versions_eju) $(versions_cn) $(versions_kr) $(versions_tw)
+
+versions_mset := mset_4x mset_4x_dg mset_6x
+versions_spider := $(versions_eju) $(versions_cn) $(versions_kr) $(versions_tw)
+
+versions := $(versions_mset) $(versions_spider)
+
+4X := 17538
+42 := $(4X)
+45 := $(4X)
+5X := 17552
+9X := 17567
 
 rops := $(foreach ver, $(versions), $(dir_build)/$(ver)/rop.dat)
+drops := $(foreach ver, $(versions_spider), $(dir_build)/$(ver)/drop.dat)
 
 .SECONDARY:
 
@@ -44,6 +55,10 @@ launcher: $(dir_out)/$(name)
 
 .PHONY: bigpayload
 bigpayload: $(dir_build)/bigpayload.built
+
+.PHONY: download
+download: $(drops)
+	echo $(drops)
 
 .PHONY: clean
 clean:
@@ -76,13 +91,19 @@ $(dir_out)/$(name): $(rops)
 
 $(dir_build)/spider_%/rop.dat: rop_param = SPIDER_$(shell echo $* | tr a-z A-Z)
 $(dir_build)/spider_%/rop.dat: $(dir_build)/spider_%/main.bin
-	@make -C rop3ds DownloadCode.dat ASFLAGS="-D$(rop_param) -DARM_CODE=../$<"
-	@mv rop3ds/DownloadCode.dat $@
+	@make -C rop3ds rop.dat ASFLAGS="-D$(rop_param) -DARM_CODE=../$<"
+	@mv rop3ds/rop.dat $@
 
 $(dir_build)/mset_%/rop.dat: rop_param = MSET_$(shell echo $* | tr a-z A-Z)
 $(dir_build)/mset_%/rop.dat: $(dir_build)/mset_%/main.bin
 	@make -C rop3ds rop.dat ASFLAGS="-D$(rop_param) -DARM_CODE=../$<"
 	@mv rop3ds/rop.dat $@
+
+$(dir_build)/spider_%/drop.dat: rop_param = SPIDER_$(shell echo $* | tr a-z A-Z)
+$(dir_build)/spider_%/drop.dat: $(dir_build)/spider_%/main.bin
+	@make -C rop3ds DownloadCode.dat ASFLAGS="-D$(rop_param) -DARM_CODE=../$<"
+	@cp rop3ds/DownloadCode.dat $@
+	@mv rop3ds/DownloadCode.dat rop3ds/$($(word 2, $(subst _, , $(rop_param))))$(shell echo $(shell echo $(word 3, $(subst _, ,$(rop_param))) | head -c 1) | tr a-z A-Z).rop
 
 # Create bin from elf
 $(dir_build)/%/main.bin: $(dir_build)/%/main.elf
