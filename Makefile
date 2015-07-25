@@ -76,8 +76,8 @@ $(dir_out)/$(name): $(rops)
 
 $(dir_build)/spider_%/rop.dat: rop_param = SPIDER_$(shell echo $* | tr a-z A-Z)
 $(dir_build)/spider_%/rop.dat: $(dir_build)/spider_%/main.bin
-	@make -C rop3ds rop.dat ASFLAGS="-D$(rop_param) -DARM_CODE=../$<"
-	@mv rop3ds/rop.dat $@
+	@make -C rop3ds DownloadCode.dat ASFLAGS="-D$(rop_param) -DARM_CODE=../$<"
+	@mv rop3ds/DownloadCode.dat $@
 
 $(dir_build)/mset_%/rop.dat: rop_param = MSET_$(shell echo $* | tr a-z A-Z)
 $(dir_build)/mset_%/rop.dat: $(dir_build)/mset_%/main.bin
